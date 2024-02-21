@@ -1,6 +1,8 @@
 require("dotenv").config();
-const { REST } = require("@discordjs/rest");
-const { Client, GatewayIntentBits, Routes } = require("discord.js");
+require("@discordjs/rest");
+const { Client, GatewayIntentBits } = require("discord.js");
+
+
 
 const puppeteer = require("puppeteer-extra");
 const stealthPlugin = require("puppeteer-extra-plugin-stealth");
@@ -13,34 +15,32 @@ const client = new Client({
   ],
 });
 
-const rest = new REST({ version: "10" }).setToken(
-  process.env.DISCORD_BOT_TOKEN
-);
+
+const prefix = '!'; 
+
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.on("interactionCreate", async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    console.log("interaction is chat input command");
-    console.log(interaction.options);
-    let username = interaction.options.getString("username");
-    let password = interaction.options.getString("password");
-    let typingSpeed = interaction.options.getString("typing-speed");
-    let playTimes = interaction.options.getString("play-times");
-    console.log(username);
-    console.log(password);
-    // console.log(interaction.options.get("username").value);
-    interaction.reply({
-      content: `hello @${
-        interaction.options.get("username").value
-      } you've started a login process to Nitro`,
-    });
-    try {
-      await startGame(username, password, typingSpeed, playTimes);
-    } catch (error) {}
-  }
-});
+client.on("messageCreate", (message) => {
+
+    if (!message.content.startsWith(prefix) || message.author.bot) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    if (command === "shield") {
+
+      const username = args[0];
+      const password = args[1];
+      const typingSpeed = args[2];
+      const playTimes = args[3];
+
+      startGame(username, password, typingSpeed, playTimes);
+
+    }
+
+  });
 
 let browser;
 
@@ -193,7 +193,7 @@ async function startGame(username, password, typingSpeed, playTimes) {
           }
           console.log(error);
           console.log(errorTimes);
-          let errorChannel = client.channels.cache.get(process.env.ERROR_CHANEL);
+          let errorChannel = client.channels.cache.get(process.env.ERROR_CHANNEL);
           errorChannel.send(`Error: ${error.message} + ${errorTimes}`);
          
         }
@@ -204,7 +204,7 @@ async function startGame(username, password, typingSpeed, playTimes) {
     }
   } catch (error) {
     console.log(error);
-    let errorChannel = client.channels.cache.get(process.env.ERROR_CHANEL);
+    let errorChannel = client.channels.cache.get(process.env.ERROR_CHANNEL);
     errorChannel.send(`${error.message};`);
     // await browser.close();
     //   return message.reply(`${message.author} ${error}`);
@@ -212,3 +212,4 @@ async function startGame(username, password, typingSpeed, playTimes) {
 }
 
 client.login(process.env.DISCORD_BOT_TOKEN);
+
